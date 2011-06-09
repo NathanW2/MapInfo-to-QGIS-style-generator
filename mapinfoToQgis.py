@@ -1,16 +1,61 @@
 from string import Template
 
 class StyleGenerator:
-    def GenerateSymbol(self,mapbasicString, name):
-        """ Generates the xml symbol block for qgis styling.
+    def generateQml(self, symbolBlocks, fieldBlock):
+        """ Generates a full qml string ready for use with QGIS
+        
+        symbolBlocks -- List of a  qml symbol blocks generated from generateSymbol()
+        fieldBlock -- qml string containing list of fields and symbol labels.  
+        If fieldBlock is null and len(symbolBlocks) == 0 then a single singleSymbol renderer is used.
+        
+        Return A qml string ready to be writing to file for qgis to use.
+        """
+        qml = Template('''<qgis>
+        <renderer-v2 symbollevels="0" type="$rendertype">
+        <symbols>
+        $symbolblocks
+        </symbols>
+        </renderer-v2>
+        </qgis> ''')
+        
+        renderType = "singleSymbol"
+        if fieldBlock is None:
+            renderType = "singleSymbol"
+        
+        symbols = ""
+        if len(symbolBlocks) > 0:
+            for symbol in symbolBlocks:
+                symbols += symbol
+        
+        # Generate the final qml string.
+        return qml.safe_substitute(rendertype=renderType,symbolblocks=symbols)
+        
+    def generateSymbol(self,mapbasicString, name):
+        """ Generates the qml symbol block from a MapInfo symbol string.
         
         mapbasicString -- The mapbasic symbol string.
         name -- the name of the symbol for qgis, normally 1..n
         
-        Return A xml string based for a qml based on closest match to 
+        Return -- A xml string based for a qml based on closest match to 
         the givin Mapbasic string.
         """
-        # Just assume that we only have to deal with font symbols for now.
+        # We can tell the type of symbol from the size of the array.
+        FONTSYMBOL = 6
+        count = len(mapbasicString.split(','))
+        if count == FONTSYMBOL:
+            return self.generateFontSymbol(mapbasicString,name)
+        else:
+            pass
+    
+    def generateFontSymbol(self,mapbasicString, name):
+        """ Generates the qml symbol block from a MapInfo font symbol string.
+        
+        mapbasicString -- The mapbasic symbol string.
+        name -- the name of the symbol for qgis, normally 1..n
+        
+        Return -- A xml string based for a qml based on closest match to 
+        the givin Mapbasic string.
+        """
         # MAPBASIC Font Symbol syntax: 
         # Symbol ( shape, color, size, fontname, fontstyle, rotation )
         
