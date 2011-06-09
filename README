@@ -1,0 +1,3 @@
+ Generates a QGIS qml file containing the closest match for a MapInfo style.
+ 
+ 	- Currently creates correct xml for mapinfo font symbols but does output a qml just yet.
