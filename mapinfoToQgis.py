@@ -77,7 +77,7 @@ class StyleGenerator:
         tokens = mapbasicString[mapbasicString.index('(') + 1 : mapbasicString.index(')')].split(',')
         # Font shape ID is +1 ID from string.
         correctId = int(tokens[0]) + 1
-        color = tokens[2]
+        color = tokens[1]
         size = tokens[2]
         # We can't handle custom symbols people have added.  Just
         # use the default MapInfo one.
@@ -136,9 +136,13 @@ class StyleGenerator:
         categories = "<categories> \n"
         for cat in fieldValueMap:
             if len(cat) == 2:
-                categories += catTemplate.safe_substitute(number = cat[0],value = cat[1], label = cat[1]) + "\n"
+                categories += catTemplate.safe_substitute(number = cat[0],
+                                                        value = cat[1].strip('"'),
+                                                         label = cat[1].strip('"')) + "\n"
             else:
-                categories += catTemplate.safe_substitute(number = cat[0],value = cat[1], label = cat[2]) + "\n"
+                categories += catTemplate.safe_substitute(number = cat[0],
+                                                        value = cat[1].strip('"'),
+                                                        label = cat[2].strip('"')) + "\n"
         categories += "</categories>"
         return categories
 
