@@ -1,6 +1,8 @@
 from string import Template
 import re
+import string
 from PyQt4.QtCore import QChar
+from optparse import OptionParser
 
 class StyleGenerator:
     def generateQml(self, symbolQmlBlocks, fieldQmlBlock, attributeColumn):
@@ -116,6 +118,33 @@ class StyleGenerator:
         categories += "</categories>"
         return categories
 
+    def createQmlFromFile(self, asciiFile,outName,columnName):
+        styles = open(asciiFile)
+        fields = []
+        symbols = {}
+        count = 0
+        for line in styles:
+            items = line.split('|')
+            if len(items) == 2:
+                # First column is value second is style
+                fields.append((count,items[0]))
+            else:
+                # First column is value, second is label, third is style
+                fields.append((count,items[0],items[0]))
+            symbols[count] = items[-1]
+            count += 1
+        #Generate the qml file
+        symbolsList = []
+        for symbol in symbols:
+            symbolsList.append(gen.generateFontSymbol(symbols[symbol],symbol))
+        fields = gen.generateFieldMap(fields)
+        qml = gen.generateQml(symbolsList,fields,columnName)
+
+        outqml = open(outName,'w')
+        outqml.write(qml)
+
+        outqml.close()
+        styles.close()
 
     def colorToRGB(self, colorValue):
         ''' Returns a RGB tuple from a Mapbasic color value
@@ -135,26 +164,13 @@ class StyleGenerator:
 
 if __name__ == '__main__':
     gen = StyleGenerator()
-    fieldMap = [
-    (0,"Non Return Valve","Non Return Valve"),
-    (1,"Actuated Valve ","Actuated Valve"),
-    (2,"Scour Valve","Scour Valve"),
-    (3,"Air Valve","Air Valve ")
-    ]
-    values = {
-    0:'Symbol (101,10502399,9,"MapInfo Cartographic",1,0)',
-    1:'Symbol (101,53456,9,"MapInfo Cartographic",1,0)',
-    2:'Symbol (101,16711680,9,"MapInfo Cartographic",0,0)',
-    3:'Symbol (101,16754768,9,"MapInfo Cartographic",1,0)  '
-    }
-    symbols = []
-    for symbol in values:
-        symbols.append(gen.generateFontSymbol(values[symbol],symbol))
-    fields = gen.generateFieldMap(fieldMap)
-    qml = gen.generateQml(symbols,fields,"Description")
-    qmlfile = open('C:\Temp\styleTest.qml','w')
-    qmlfile.write(qml)
-    qmlfile.close()
+    usage = "usage: %prog  inputFile outQmlFile [options]"
+    parser = OptionParser(usage)
+    parser.add_option("-c", "--column", dest="columnName",
+                      help="Name of the column the values are in")
+
+    (options, args) = parser.parse_args()
+    gen.createQmlFromFile(args[0],args[1],options.columnName or "")
 
 
 
