@@ -53,13 +53,37 @@ class StyleGenerator:
         Return -- A xml string based for a qml based on closest match to
         the givin Mapbasic string.
         """
+
         # We can tell the type of symbol from the size of the array.
         FONTSYMBOL = 6
+        SIMPLESYMBOL = 3
         count = len(mapbasicString.split(','))
         if count == FONTSYMBOL:
             return self.generateFontSymbol(mapbasicString,name)
+        elif count == SIMPLESYMBOL:
+            # Translate the simple font string into a font one.
+            fontString = self.translateSimpleSymbol(mapbasicString)
+            return self.generateFontSymbol(fontString,name)
         else:
             pass
+
+    def translateSimpleSymbol(self,mapbasicString):
+        ''' Translates a Mapbasic 3.0 Symbol into a new font MapInfo Symbol
+        '''
+        # MAPBASIC Font Symbol syntax:
+        # Symbol ( shape, color, size )
+
+        fontSymbol = Template('Symbol ($id,$color,$size,"MapInfo Symbols",0,0)')
+        tokens = mapbasicString[mapbasicString.index('(') + 1 : mapbasicString.index(')')].split(',')
+        # Font shape ID is +1 ID from string.
+        correctId = int(tokens[0]) + 1
+        color = tokens[2]
+        size = tokens[2]
+        # We can't handle custom symbols people have added.  Just
+        # use the default MapInfo one.
+        if correctId > 68:
+            correctId = 33
+        return fontSymbol.safe_substitute(id=correctId,size=size,color=color)
 
     def generateFontSymbol(self,mapbasicString, name):
         """ Generates the qml symbol block from a MapInfo font symbol string.
@@ -119,6 +143,17 @@ class StyleGenerator:
         return categories
 
     def createQmlFromFile(self, asciiFile,outName,columnName):
+        ''' Writes a qml file from a | delimited file
+        Syntax of input file:
+            {value} | {label} | {font style}
+        or
+            {value} | {font style}
+
+        asciiFile -- Name of the input file in the supported format
+        outName -- Name of the output qml file
+        columnName -- Name of the column that contains the values.
+        '''
+
         styles = open(asciiFile)
         fields = []
         symbols = {}
@@ -130,21 +165,26 @@ class StyleGenerator:
                 fields.append((count,items[0]))
             else:
                 # First column is value, second is label, third is style
-                fields.append((count,items[0],items[0]))
+                fields.append((count,items[0],items[1]))
             symbols[count] = items[-1]
             count += 1
+        styles.close()
+
         #Generate the qml file
         symbolsList = []
         for symbol in symbols:
-            symbolsList.append(gen.generateFontSymbol(symbols[symbol],symbol))
+            symbolqml = gen.generateSymbol(symbols[symbol],symbol)
+            if not symbolqml is None:
+                symbolsList.append(symbolqml)
+            else:
+                continue
         fields = gen.generateFieldMap(fields)
         qml = gen.generateQml(symbolsList,fields,columnName)
 
         outqml = open(outName,'w')
         outqml.write(qml)
-
         outqml.close()
-        styles.close()
+
 
     def colorToRGB(self, colorValue):
         ''' Returns a RGB tuple from a Mapbasic color value
@@ -164,7 +204,14 @@ class StyleGenerator:
 
 if __name__ == '__main__':
     gen = StyleGenerator()
-    usage = "usage: %prog  inputFile outQmlFile [options]"
+    usage = '''usage: %prog  inputFile outQmlFile [options]
+
+inputFile must contain a list of values and styles in the following format
+Supported formats:
+        {value} | {label} | {font style}
+    or
+        {value} | {font style}
+    '''
     parser = OptionParser(usage)
     parser.add_option("-c", "--column", dest="columnName",
                       help="Name of the column the values are in")
