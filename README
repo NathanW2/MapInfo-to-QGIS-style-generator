@@ -1,3 +1,23 @@
  Generates a QGIS qml file containing the closest match for a MapInfo style.
- 
- 	- Currently creates correct xml for mapinfo font symbols but does output a qml just yet.
+
+    - Can generate a QGIS Categorized Symbols qml from a list of values and MapInfo font symbols
+        Example in mapinfo.txt:
+            Non Return Valve| Symbol (101,10502399,9,"MapInfo Cartographic",1,0)
+            Actuated Valve| Symbol (101,53456,9,"MapInfo Cartographic",1,0)
+            Scour Valve| Symbol (101,16711680,9,"MapInfo Cartographic",0,0)
+            Air Valve| Symbol (101,16754768,9,"MapInfo Cartographic",1,0)
+        Must be delimited using |
+        Supported formats:
+            {value} | {label} | {font style}
+        or
+            {value} | {font style}
+ 	- Currently only creates correct qml styles for mapinfo font symbols.
+
+Usage (WARNING! MAY CHANGE):
+    Usage: mapinfoToQgis.py  inputFile outQmlFile [options]
+
+    Options:
+      -h, --help            show this help message and exit
+      -c COLUMNNAME, --column=COLUMNNAME
+                            Name of the column the values are in
+
