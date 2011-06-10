@@ -5,71 +5,87 @@ import difflib
 class testStyleGenerator(unittest.TestCase):
     def setUp(self):
         self.gen = StyleGenerator()
-        
-    def testQmlOutputWithOneSymbolBlock(self):
+
+    def testField_Map_Qml_With_Label_And_Value(self):
+        fieldMap = [(0,"TestLabel2","TestValue"),(1,"TestLabel2","TestValue2")]
+        output = self.gen.generateFieldMap(fieldMap)
+
+        expected = '<categories> \n'
+        expected += '<category symbol="0" value="TestLabel2" label="TestValue" />\n'
+        expected += '<category symbol="1" value="TestLabel2" label="TestValue2" />\n'
+        expected += '</categories>'
+        self.assertEqual(output,expected)
+
+    def testPoint_To_QGISSize(self):
+        '''Conversion should be 3 points == 1mm'''
+        expected = 1
+        point = 3
+        self.assertEqual(self.gen.pointTomm(point),expected)
+
+
+    def testQml_Output_With_One_Symbol_Block(self):
         symbolblock = '''<symbol outputUnit="MM" alpha="1" type="marker" name="0" >
         <layer pass="0" class="FontMarker" locked="0" >
           <prop k="angle" v="0" />
-          <prop k="chr" v="101" />
+          <prop k="chr" v="e" />
           <prop k="color" v="160,64,255" />
           <prop k="font" v="MapInfo Cartographic" />
           <prop k="offset" v="0,0" />
-          <prop k="size" v="9.0" />
+          <prop k="size" v="3.0" />
         </layer>
-        </symbol> '''
-        
+        </symbol>'''
+
         expected = '''<qgis>
-        <renderer-v2 symbollevels="0" type="singleSymbol">
+        <renderer-v2  symbollevels="0" type="singleSymbol">
         <symbols>
         <symbol outputUnit="MM" alpha="1" type="marker" name="0" >
         <layer pass="0" class="FontMarker" locked="0" >
           <prop k="angle" v="0" />
-          <prop k="chr" v="101" />
+          <prop k="chr" v="e" />
           <prop k="color" v="160,64,255" />
           <prop k="font" v="MapInfo Cartographic" />
           <prop k="offset" v="0,0" />
-          <prop k="size" v="9.0" />
+          <prop k="size" v="3.0" />
         </layer>
         </symbol>
         </symbols>
         </renderer-v2>
         </qgis>'''
-        output = self.gen.generateQml([symbolblock],None)
+        output = self.gen.generateQml([symbolblock],None,None)
+        print expected
         print output
-        print ''.join(difflib.ndiff(expected.splitlines(1),output.splitlines(1)))
+        print ''.join(difflib.unified_diff(expected.splitlines(1),output.splitlines(1)))
         self.assertEqual(output,expected)
-    
-    def testFontSymbolGeneration(self):
+
+    def testFont_Symbol_Generation(self):
         mapbasic = 'Symbol (101,10502399,9,"MapInfo Cartographic",1,0)'
         expected = '''
         <symbol outputUnit="MM" alpha="1" type="marker" name="0" >
         <layer pass="0" class="FontMarker" locked="0" >
           <prop k="angle" v="0" />
-          <prop k="chr" v="101" />
+          <prop k="chr" v="e" />
           <prop k="color" v="160,64,255" />
           <prop k="font" v="MapInfo Cartographic" />
           <prop k="offset" v="0,0" />
-          <prop k="size" v="9.0" />
+          <prop k="size" v="3.0" />
         </layer>
-        </symbol>
-        '''
+        </symbol>'''
+
         output = self.gen.generateSymbol(mapbasic,0)
-        print expected
-        print output
         self.assertEqual(output,expected)
-    
-    def testColorValueToCorrectRGB(self):
+
+    def testColor_Value_To_CorrectRGB(self):
         # Expected values
         color = '16750323'
         red = 255
         green = 150
         blue = 243
-        
+
         colors = self.gen.colorToRGB(color)
         self.assertEqual(colors[0],red,"Red failed")
         self.assertEqual(colors[1],green,"Green failed")
         self.assertEqual(colors[2],blue,"Blue failed")
-        
-        
+
+
 if __name__ == '__main__':
     unittest.main()
