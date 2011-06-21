@@ -11,7 +11,7 @@
             {value} | {label} | {font style}
         or
             {value} | {font style}
-    - Does not support custom bmp MapInfo symbols.
+    - Does not support custom bmp MapInfo symbols. QGIS uses svg rather the bitmap.
     - WARNING. Little to no error handling at the current time
 
 Usage (WARNING! MAY CHANGE):

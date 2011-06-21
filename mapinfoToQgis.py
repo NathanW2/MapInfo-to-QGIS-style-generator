@@ -3,6 +3,7 @@ import re
 import string
 from PyQt4.QtCore import QChar
 from optparse import OptionParser
+from templates import templateLookup
 
 class StyleGenerator:
     def generateQml(self, symbolQmlBlocks, fieldQmlBlock, attributeColumn):
@@ -14,13 +15,7 @@ class StyleGenerator:
 
         Return A qml string ready to be writing to file for qgis to use.
         """
-        qml = Template('''<qgis>
-        <renderer-v2 $attr symbollevels="0" type="$rendertype"> $categories
-        <symbols>
-        $symbolblocks
-        </symbols>
-        </renderer-v2>
-        </qgis>''')
+        qml = templateLookup['baseBlock']
 
         # Handle for the case of a single symbol by default
         renderType = "singleSymbol"
@@ -97,17 +92,7 @@ class StyleGenerator:
         # MAPBASIC Font Symbol syntax:
         # Symbol ( shape, color, size, fontname, fontstyle, rotation )
 
-        fontTemplate = Template('''
-        <symbol outputUnit="MM" alpha="1" type="marker" name="$name" >
-        <layer pass="0" class="FontMarker" locked="0" >
-          <prop k="angle" v="$angle" />
-          <prop k="chr" v="$shapeIndex" />
-          <prop k="color" v="$color" />
-          <prop k="font" v="$fontname" />
-          <prop k="offset" v="0,0" />
-          <prop k="size" v="$size" />
-        </layer>
-        </symbol>''')
+        fontTemplate = templateLookup['symbolFont']
 
         tokens = mapbasicString[mapbasicString.index('(') + 1 : mapbasicString.index(')')].split(',')
         rgb = self.colorToRGB(tokens[1])
@@ -131,7 +116,7 @@ class StyleGenerator:
         if fieldValueMap is None or len(fieldValueMap) == 0:
             return None
 
-        catTemplate = Template('<category symbol="$number" value="$value" label="$label" />')
+        catTemplate = templateLookup['categoriesBlock']
 
         categories = "<categories> \n"
         for cat in fieldValueMap:
