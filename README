@@ -38,3 +38,18 @@ Usage (WARNING! MAY CHANGE):
                             Only point object tables are currently supported.
                             MapInfo must be installed.
 
+Step by step:
+    1. Download latest package from https://github.com/NathanW2/MapInfo-to-QGIS-style-generator
+    2. Extact zip
+    3. Open OsGeo4W shell (Found under Start->OsGeo4w->OsGeo4W)
+    4. Run the following commands in OsGeo4W shell
+        cd {folder of extracted zip}
+        python mapinfoToQgis.py --help
+    5. Follow help commands
+    6. Open MapInfo layer in QGIS.
+    7. Open layer properties via double click or right click -> properties.
+    8. Select Load Style
+    9. Load the qml you supplied to mapinfoToQgis.py
+    10. Enjoy
+
+
