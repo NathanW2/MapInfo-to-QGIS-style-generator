@@ -49,6 +49,10 @@ class StyleGenerator:
         the givin Mapbasic string.
         """
 
+        if not "symbol" in mapbasicString.lower():
+            print "Other object types not supported yet"
+            return None
+
         # We can tell the type of symbol from the size of the array.
         FONTSYMBOL = 6
         SIMPLESYMBOL = 3
@@ -162,14 +166,17 @@ class StyleGenerator:
             else:
                 # First column is value, second is label, third is style
                 fields.append((count,items[0],items[1]))
+            #The last column is always the style string.
             symbols[count] = items[-1]
             count += 1
         styles.close()
 
         #Generate the qml file
+        print "Generating QGIS styles for:"
         symbolsList = []
-        for symbol in symbols:
-            symbolqml = gen.generateSymbol(symbols[symbol],symbol)
+        for symbolNo in symbols:
+            print symbols[symbolNo]
+            symbolqml = gen.generateSymbol(symbols[symbolNo],symbolNo)
             if not symbolqml is None:
                 symbolsList.append(symbolqml)
             else:
