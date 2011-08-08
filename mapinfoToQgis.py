@@ -97,13 +97,20 @@ class StyleGenerator:
         tokens = mapbasicString[mapbasicString.index('(') + 1 : mapbasicString.index(')')].split(',')
         rgb = self.colorToRGB(tokens[1])
         rgbString = "%s,%s,%s" % (rgb[0],rgb[1],rgb[2])
+        shape = QChar(int(tokens[0])).toAscii()
+        # Handle escaping special XML tokens.
+        if shape == '<':
+            shape = '&lt;'
+        elif shape == '&':
+            shape = '&amp;'
         values = dict(
-            shapeIndex = QChar(int(tokens[0])).toAscii(),
+            shapeIndex = shape,
             color = rgbString, # Color needs to be converted to RGB
             size = self.pointTomm(tokens[2]), # Mapasic size 3 points == 1 mm
             fontname = tokens[3].strip('"'),
             angle = int(tokens[5]) / 180, # MapInfo rotation is back to front.
             name = name)
+
         # Generate the xml for a font marker
         return fontTemplate.safe_substitute(values)
 

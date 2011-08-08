@@ -1,4 +1,4 @@
-# This file contains all the qml style templates for QGIS->MapInfo
+# This file contains all the qml style templates for MapInfo->QGIS
 from string import Template
 
 fontStyleQML = '''<symbol outputUnit="MM" alpha="1" type="marker" name="$name" >
@@ -27,5 +27,3 @@ templateLookup = {
                     "categoriesBlock":Template(categoriesQML),
                     "baseBlock":Template(stylebaseQML)
 }
-
-print stylebaseQML
