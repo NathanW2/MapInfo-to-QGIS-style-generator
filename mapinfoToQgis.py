@@ -188,6 +188,38 @@ class StyleGenerator:
         outqml.write(qml)
         outqml.close()
 
+    def createQMLFromMapInfoTable(self,mapinfoTable, outName, columnName):
+        ''' Opens MapInfo and generates a qml file from the supplied table.
+        mapinfoTable -- Name of the input tab file.
+        outName -- Name of the output qml file
+        columnName -- Name of the column that contains the values.
+
+        WARNING: Very little error handling here.
+        '''
+        import tempfile, os
+        from win32com.client import Dispatch
+        openTable = 'Open Table "%s" as tempMapInfoToQGIS' % mapinfoTable
+        groupBySQL = 'Select %s, Str$(ObjectInfo(obj,2)) from tempMapInfoToQGIS \
+        Where Str$(ObjectInfo(obj,1)) = "5" Group By %s Into outputTable' % (columnName, columnName)
+        tempoutput = tempfile.gettempdir() + "\mapinfoToQGISTemp.txt"
+        try:
+            os.remove(tempoutput)
+        except WindowsError:
+            #Do nothing here a MapInfo will create the file.
+            pass
+        exportString = 'Export "outputTable" Into "%s" Type "ASCII" Delimiter "|" CharSet "WindowsLatin1"' % tempoutput
+
+        print "Opening MapInfo..."
+        mapinfo = Dispatch("MapInfo.Application")
+        mapinfo.do(openTable)
+        mapinfo.do(groupBySQL)
+        print "Exporting style table..."
+        mapinfo.do(exportString)
+
+        mapinfo.do("End MapInfo")
+        mapinfo = None
+
+        self.createQmlFromFile(tempoutput,outName,columnName)
 
     def colorToRGB(self, colorValue):
         ''' Returns a RGB tuple from a Mapbasic color value
@@ -218,9 +250,22 @@ Supported formats:
     parser = OptionParser(usage)
     parser.add_option("-c", "--column", dest="columnName",
                       help="Name of the column the values are in")
+    parser.add_option("-m", "--UseMapInfo", action="store_true", dest="useMapInfo",
+                      default=False, help="If used MapInfo will be invoked to handle to needed query for \
+                      the correct input.  inputFile must be the path a MapInfo table. \
+                      Column name must be supplied using -c \
+                      Only point object tables are currently supported. \
+                      MapInfo must be installed. ")
 
     (options, args) = parser.parse_args()
-    gen.createQmlFromFile(args[0],args[1],options.columnName or "")
+    columnName = options.columnName
+
+    if options.useMapInfo:
+        gen.createQMLFromMapInfoTable(args[0],args[1],columnName)
+    elif (not options.useMapInfo):
+        gen.createQmlFromFile(args[0],args[1],columnName or "")
+    else:
+        parser.error("incorrect number of arguments")
 
 
 

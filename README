@@ -1,6 +1,6 @@
  Generates a QGIS qml file containing the closest match for a MapInfo style.
 
-    - Can generate a QGIS Categorized Symbols qml from a list of values, MapInfo Font or MapInfo 3.0 symbols
+    - Can generate a QGIS Categorized Symbols qml from a list of values and MapInfo Font or MapInfo 3.0 symbols
         Example in mapinfo.txt:
             Non Return Valve| Symbol (101,10502399,9,"MapInfo Cartographic",1,0)
             Actuated Valve| Symbol (101,53456,9,"MapInfo Cartographic",1,0)
@@ -11,14 +11,30 @@
             {value} | {label} | {font style}
         or
             {value} | {font style}
+    - Using the --UseMapInfo flag MapInfo will be invoked to generate the above text file
+      and QML file for you.
     - Does not support custom bmp MapInfo symbols. QGIS uses svg rather the bitmap.
-    - WARNING. Little to no error handling at the current time
+    - WARNING. Little to no error handling at the current time.
+    - NOTE: Only symbols are currently supported.  Lines and Regions will be added later.
 
 Usage (WARNING! MAY CHANGE):
     Usage: mapinfoToQgis.py  inputFile outQmlFile [options]
 
+    inputFile must contain a list of values and styles in the following format
+    Supported formats:
+        {value} | {label} | {font style}
+    or
+        {value} | {font style}
+
+    inputFile can also be a path to a MapInfo TAB file if you are using the --UseMapInfo switch.
     Options:
       -h, --help            show this help message and exit
       -c COLUMNNAME, --column=COLUMNNAME
                             Name of the column the values are in
+      -m, --UseMapInfo
+                            If used MapInfo will be invoked to handle to needed query for
+                            the correct input.  inputFile must be the path a MapInfo table.
+                            Column name must be supplied using -c
+                            Only point object tables are currently supported.
+                            MapInfo must be installed.
 
