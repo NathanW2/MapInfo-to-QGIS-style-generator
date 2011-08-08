@@ -107,6 +107,8 @@ class StyleGenerator:
             shape = '&lt;'
         elif shape == '&':
             shape = '&amp;'
+        elif shape == '"':
+            shape = '&quot;'
         values = dict(
             shapeIndex = shape,
             color = rgbString, # Color needs to be converted to RGB
