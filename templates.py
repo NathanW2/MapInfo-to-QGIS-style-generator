@@ -12,6 +12,19 @@ fontStyleQML = '''<symbol outputUnit="MM" alpha="1" type="marker" name="$name" >
 </layer>
 </symbol>'''
 
+simpleLineStyleQML = '''<symbol outputUnit="MM" alpha="1" type="line" name="$name">
+<layer pass="0" class="SimpleLine" locked="0">
+  <prop k="capstyle" v="square"/>
+  <prop k="color" v="$color"/>
+  <prop k="customdash" v="5;2"/>
+  <prop k="joinstyle" v="bevel"/>
+  <prop k="offset" v="0"/>
+  <prop k="penstyle" v="solid"/>
+  <prop k="use_custom_dash" v="0"/>
+  <prop k="width" v="$width"/>
+</layer>
+</symbol>'''
+
 categoriesQML = '<category symbol="$number" value="$value" label="$label" />'
 
 stylebaseQML = '''<qgis>
@@ -25,5 +38,6 @@ $symbolblocks
 templateLookup = {
                     "symbolFont":Template(fontStyleQML),
                     "categoriesBlock":Template(categoriesQML),
+                    "simpleLineStyle":Template(simpleLineStyleQML),
                     "baseBlock":Template(stylebaseQML)
 }

@@ -5,6 +5,11 @@ from PyQt4.QtCore import QChar
 from optparse import OptionParser
 from templates import templateLookup
 
+class STYLE:
+    """ Type of MapInfo style clause"""
+    POINT = "symbol"
+    LINE = "pen"
+
 class StyleGenerator:
     def generateQml(self, symbolQmlBlocks, fieldQmlBlock, attributeColumn):
         """ Generates a full qml string ready for use with QGIS
@@ -49,22 +54,26 @@ class StyleGenerator:
         the givin Mapbasic string.
         """
 
-        if not "symbol" in mapbasicString.lower():
-            print "Other object types not supported yet"
-            return None
-
-        # We can tell the type of symbol from the size of the array.
-        FONTSYMBOL = 6
-        SIMPLESYMBOL = 3
         count = len(mapbasicString.split(','))
-        if count == FONTSYMBOL:
-            return self.generateFontSymbol(mapbasicString,name)
-        elif count == SIMPLESYMBOL:
-            # Translate the simple font string into a font one.
-            fontString = self.translateSimpleSymbol(mapbasicString)
-            return self.generateFontSymbol(fontString,name)
-        else:
+        stylString = mapbasicString.lower()
+
+        if (STYLE.LINE in stylString):
+            # Do stuff with lines only if we have the correct amount of tokens
+            if count == 3:
+                return self.generateLineFromPen(mapbasicString, name)
             pass
+        elif (STYLE.POINT in stylString):
+            # We can tell the type of symbol from the size of the array.
+            FONTSYMBOL = 6
+            SIMPLESYMBOL = 3
+            if count == FONTSYMBOL:
+                return self.generateFontSymbol(mapbasicString,name)
+            elif count == SIMPLESYMBOL:
+                # Translate the simple font string into a font one.
+                fontString = self.translateSimpleSymbol(mapbasicString)
+                return self.generateFontSymbol(fontString,name)
+            else:
+                pass
 
     def translateSimpleSymbol(self,mapbasicString):
         ''' Translates a Mapbasic 3.0 Symbol into a new font MapInfo Symbol
@@ -119,6 +128,23 @@ class StyleGenerator:
 
         # Generate the xml for a font marker
         return fontTemplate.safe_substitute(values)
+
+    def generateLineFromPen(self, mapbasicString, name):
+        # MAPBASIC Font Symbol syntax:
+        # Pen ( width, pattern, color )
+        # NOTE Currently we only generate simple line types.
+
+        # TODO Refactor mapbasicString into it's own object so it can handle all this mess.
+        lineTemplate = templateLookup['simpleLineStyle']
+        tokens = mapbasicString[mapbasicString.index('(') + 1 : mapbasicString.index(')')].split(',')
+        rgb = self.colorToRGB(tokens[2])
+        rgbString = "%s,%s,%s" % (rgb[0],rgb[1],rgb[2])
+        values = dict(
+            color = rgbString, # Color needs to be converted to RGB
+            width = self.pointTomm(tokens[0]), # Mapasic size 3 points == 1 mm
+            name = name)
+
+        return lineTemplate.safe_substitute(values)
 
     def generateFieldMap(self, fieldValueMap):
         ''' Generates qml block with symbol number, value, label mapping
@@ -178,6 +204,7 @@ class StyleGenerator:
         symbolsList = []
         for symbolNo in symbols:
             print symbols[symbolNo]
+            print symbolNo
             symbolqml = gen.generateSymbol(symbols[symbolNo],symbolNo)
             if not symbolqml is None:
                 symbolsList.append(symbolqml)
@@ -201,8 +228,7 @@ class StyleGenerator:
         import tempfile, os
         from win32com.client import Dispatch
         openTable = 'Open Table "%s" as tempMapInfoToQGIS' % mapinfoTable
-        groupBySQL = 'Select %s, Str$(ObjectInfo(obj,2)) from tempMapInfoToQGIS \
-        Where Str$(ObjectInfo(obj,1)) = "5" Group By %s Into outputTable' % (columnName, columnName)
+        groupBySQL = 'Select %s, Str$(ObjectInfo(obj,2)) from tempMapInfoToQGIS Group By %s Into outputTable' % (columnName, columnName)
         tempoutput = tempfile.gettempdir() + "\mapinfoToQGISTemp.txt"
         try:
             os.remove(tempoutput)
