@@ -2,6 +2,7 @@ from string import Template
 import re
 import string
 from PyQt4.QtCore import QChar
+from PyQt4.QtGui import QApplication,QPaintDevice, QPainter
 from optparse import OptionParser
 from templates import templateLookup
 
@@ -76,8 +77,8 @@ class StyleGenerator:
                 pass
 
     def translateSimpleSymbol(self,mapbasicString):
-        ''' Translates a Mapbasic 3.0 Symbol into a new font MapInfo Symbol
-        '''
+        """ Translates a Mapbasic 3.0 Symbol into a new font MapInfo Symbol """
+
         # MAPBASIC Font Symbol syntax:
         # Symbol ( shape, color, size )
 
@@ -141,17 +142,17 @@ class StyleGenerator:
         rgbString = "%s,%s,%s" % (rgb[0],rgb[1],rgb[2])
         values = dict(
             color = rgbString, # Color needs to be converted to RGB
-            width = self.pointTomm(tokens[0]), # Mapasic size 3 points == 1 mm
+            width = self.penWidthTomm(tokens[0]),
             name = name)
 
         return lineTemplate.safe_substitute(values)
 
     def generateFieldMap(self, fieldValueMap):
-        ''' Generates qml block with symbol number, value, label mapping
+        """ Generates qml block with symbol number, value, label mapping
 
         fieldValueMap -- A list of tuples containing number, value, label maps.
 
-        '''
+        """
         if fieldValueMap is None or len(fieldValueMap) == 0:
             return None
 
@@ -171,7 +172,7 @@ class StyleGenerator:
         return categories
 
     def createQmlFromFile(self, asciiFile,outName,columnName):
-        ''' Writes a qml file from a | delimited file
+        """ Writes a qml file from a | delimited file
         Syntax of input file:
             {value} | {label} | {font style}
         or
@@ -180,7 +181,7 @@ class StyleGenerator:
         asciiFile -- Name of the input file in the supported format
         outName -- Name of the output qml file
         columnName -- Name of the column that contains the values.
-        '''
+        """
 
         styles = open(asciiFile)
         fields = []
@@ -203,8 +204,7 @@ class StyleGenerator:
         print "Generating QGIS styles for:"
         symbolsList = []
         for symbolNo in symbols:
-            print symbols[symbolNo]
-            print symbolNo
+            print "No. %s : %s " % (symbolNo, symbols[symbolNo])
             symbolqml = gen.generateSymbol(symbols[symbolNo],symbolNo)
             if not symbolqml is None:
                 symbolsList.append(symbolqml)
@@ -218,13 +218,14 @@ class StyleGenerator:
         outqml.close()
 
     def createQMLFromMapInfoTable(self,mapinfoTable, outName, columnName):
-        ''' Opens MapInfo and generates a qml file from the supplied table.
+        """ Opens MapInfo and generates a qml file from the supplied table.
         mapinfoTable -- Name of the input tab file.
         outName -- Name of the output qml file
         columnName -- Name of the column that contains the values.
 
         WARNING: Very little error handling here.
-        '''
+        """
+
         import tempfile, os
         from win32com.client import Dispatch
         openTable = 'Open Table "%s" as tempMapInfoToQGIS' % mapinfoTable
@@ -233,7 +234,7 @@ class StyleGenerator:
         try:
             os.remove(tempoutput)
         except WindowsError:
-            #Do nothing here a MapInfo will create the file.
+            #Do nothing here as MapInfo will create the file.
             pass
         exportString = 'Export "outputTable" Into "%s" Type "ASCII" Delimiter "|" CharSet "WindowsLatin1"' % tempoutput
 
@@ -250,12 +251,12 @@ class StyleGenerator:
         self.createQmlFromFile(tempoutput,outName,columnName)
 
     def colorToRGB(self, colorValue):
-        ''' Returns a RGB tuple from a Mapbasic color value
+        """ Returns a RGB tuple from a Mapbasic color value
         Formula:
         R = RGB \ 65536
         G =  (RGB - R*65536) \ 256
         B = RGB - R*65536 - G*256
-        '''
+        """
         color = int(colorValue)
         red = color / 65536
         green = (color - red * 65536) / 256
@@ -264,6 +265,21 @@ class StyleGenerator:
 
     def pointTomm(self,pointSize):
         return float(pointSize) / 3
+
+    def penWidthTomm(self, pensize):
+        # Pen width info from http://www.gissky.com/download/Download/DataFormat/Mapinfo_Mif.pdf
+        # Width is a number from 1 to 7. 1-7 is the width in screen pixels. 11-2047 are values that will be
+        # converted to points:
+        # penwidth = (number of points * 10) + 10
+        pensize = float( pensize )
+        if ( pensize >= 11 ):
+            pointsize = (float(pensize) - 10) / 10
+            return pointsize / 3
+        else:
+            # This isn't really right as pixel size depends on the moniter settings but
+            # working it out is a real pain so using this method will work for now.
+            return pensize / 3
+
 
 if __name__ == '__main__':
     gen = StyleGenerator()

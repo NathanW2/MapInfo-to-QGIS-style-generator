@@ -22,40 +22,10 @@ class testStyleGenerator(unittest.TestCase):
         point = 3
         self.assertEqual(self.gen.pointTomm(point),expected)
 
-
-    def testQml_Output_With_One_Symbol_Block(self):
-        symbolblock = '''<symbol outputUnit="MM" alpha="1" type="marker" name="0" >
-<layer pass="0" class="FontMarker" locked="0" >
-  <prop k="angle" v="0" />
-  <prop k="chr" v="e" />
-  <prop k="color" v="160,64,255" />
-  <prop k="font" v="MapInfo Cartographic" />
-  <prop k="offset" v="0,0" />
-  <prop k="size" v="3.0" />
-</layer>
-</symbol>'''
-
-        expected = '''<qgis>
-<renderer-v2  symbollevels="0" type="singleSymbol">
-<symbols>
-<symbol outputUnit="MM" alpha="1" type="marker" name="0" >
-<layer pass="0" class="FontMarker" locked="0" >
-  <prop k="angle" v="0" />
-  <prop k="chr" v="e" />
-  <prop k="color" v="160,64,255" />
-  <prop k="font" v="MapInfo Cartographic" />
-  <prop k="offset" v="0,0" />
-  <prop k="size" v="3.0" />
-</layer>
-</symbol>
-</symbols>
-</renderer-v2>
-</qgis>'''
-        output = self.gen.generateQml([symbolblock],None,None)
-        print expected
-        print output
-        print ''.join(difflib.unified_diff(expected.splitlines(1),output.splitlines(1)))
-        self.assertEqual(output,expected)
+    def testPenWidthToPoints(self):
+        expected = 3
+        penwdith = 40
+        self.assertEqual(self.gen.penWidthToPoint(penwdith),expected)
 
     def testFont_Symbol_Generation(self):
         mapbasic = 'Symbol (101,10502399,9,"MapInfo Cartographic",1,0)'
